@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 
-const API_KEY = process.env.REACT_APP_API_KEY;
-
 const globalStyles = `
   @keyframes fadeSlideIn {
     from { opacity: 0; transform: translateY(16px); }
@@ -53,24 +51,13 @@ export default function App() {
     setCards([]);
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": API_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 1000,
-          system: `You are a study assistant. Generate exactly ${cardCount} flashcards from the provided notes. Return ONLY a valid JSON array, no markdown, no explanation. Format: [{"q": "question text", "a": "answer text"}, ...]. Keep questions concise and answers clear.`,
-          messages: [{ role: "user", content: `Generate ${cardCount} flashcards from these notes:\n\n${notes}` }],
-        }),
+      const response = await fetch("http://127.0.0.1:8000/generate", {
+  	method: "POST",
+  	headers: { "Content-Type": "application/json" },
+  	body: JSON.stringify({ notes, count: cardCount }),
       });
-
       const data = await response.json();
-      let text = data.content.map((i) => i.text || "").join("");
+      let text = data.flashcards;
       text = text.replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(text);
 
