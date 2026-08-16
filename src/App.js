@@ -248,7 +248,7 @@ function LandingPage({ onSignIn }) {
         <div style={{ background: C.bgCard, border: `0.5px solid ${C.border}`, borderRadius: 20, padding: "2rem", marginBottom: "5rem", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg, transparent, ${C.accent}, transparent)` }} />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1.5rem" }}>
-            {[{n:"6",l:"AI features"},{n:"7",l:"File formats"},{n:"< 10s",l:"Generation time"},{n:"Free",l:"Always"}].map((s) => (
+            {[{n:"7",l:"AI features"},{n:"7",l:"File formats"},{n:"< 10s",l:"Generation time"},{n:"Free",l:"Always"}].map((s) => (
               <div key={s.l} style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 28, fontWeight: 700, color: C.accent, marginBottom: 4 }}>{s.n}</div>
                 <div style={{ fontSize: 13, color: C.textSecondary }}>{s.l}</div>
@@ -259,17 +259,19 @@ function LandingPage({ onSignIn }) {
 
         <div style={{ marginBottom: "5rem" }}>
           <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-            <h2 style={{ fontSize: 32, fontWeight: 600, color: C.textPrimary, marginBottom: 8 }}>Six AI features that actually help</h2>
+            <h2 style={{ fontSize: 32, fontWeight: 600, color: C.textPrimary, marginBottom: 8 }}>Seven AI features that actually help</h2>
             <p style={{ fontSize: 16, color: C.textSecondary, margin: 0 }}>Not just card generation. A full study system.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 14 }}>
             {[
-              { icon: "🎯", title: "Difficulty control", desc: "Choose beginner, intermediate, or advanced. The AI changes how it writes questions to match." },
-              { icon: "🏷️", title: "Auto naming and tagging", desc: "AI reads your deck and suggests a name and subject tag so you never stare at a blank field." },
-              { icon: "💬", title: "AI tutor per card", desc: "Stuck on a card? Ask follow-up questions and get plain-language explanations with examples." },
-              { icon: "📝", title: "Quiz mode with grading", desc: "Turn any deck into a quiz. Type your answers and get graded with real feedback, not just right or wrong." },
-              { icon: "📊", title: "Weak spot detection", desc: "AI analyzes what you got wrong, names the concept gap, and generates targeted practice cards." },
-              { icon: "⚡", title: "Adaptive difficulty", desc: "Too easy or too hard? One click rewrites the card at a different level, same concept." },
+              { icon: "\u{1F9E0}", title: "Generate from anything", desc: "Upload a PDF, Word doc, slide deck, text file, or a photo of your notes. The text gets pulled out and turned into cards." },
+              { icon: "\u{1F3AF}", title: "Difficulty control", desc: "Choose beginner, intermediate, or advanced. The AI changes how it writes questions to match." },
+              { icon: "\u{1F3F7}\uFE0F", title: "Auto naming and tagging", desc: "AI reads your deck and suggests a name and subject tag so you never stare at a blank field." },
+              { icon: "\u{1F4AC}", title: "AI tutor per card", desc: "Stuck on a card? Ask follow-up questions and get plain-language explanations with examples." },
+              { icon: "\u{1F4DD}", title: "Quiz mode with grading", desc: "Turn any deck into a quiz. Type your answers and get graded with real feedback, not just right or wrong." },
+              { icon: "\u{1F4CA}", title: "Weak spot detection", desc: "AI analyzes what you got wrong, names the concept gap, and generates targeted practice cards." },
+              { icon: "\u26A1", title: "Adaptive difficulty", desc: "Too easy or too hard? One click rewrites the card at a different level, same concept." },
+              { icon: "\u{1F465}", title: "Class groups", desc: "Create a class, share the join code, and everyone studies from the same set of decks." },
             ].map((f) => (
               <div key={f.title} className="feature-card" style={{ background: C.bgCard, border: `0.5px solid ${C.border}`, borderRadius: 14, padding: "1.5rem" }}>
                 <div style={{ fontSize: 26, marginBottom: 12 }}>{f.icon}</div>
@@ -283,19 +285,66 @@ function LandingPage({ onSignIn }) {
         <div style={{ marginBottom: "5rem" }}>
           <div style={{ textAlign: "center", marginBottom: "3rem" }}>
             <h2 style={{ fontSize: 32, fontWeight: 600, color: C.textPrimary, marginBottom: 8 }}>How it works</h2>
-            <p style={{ fontSize: 16, color: C.textSecondary, margin: 0 }}>From notes to mastery in four steps</p>
+            <p style={{ fontSize: 16, color: C.textSecondary, margin: 0 }}>From notes to mastery in five steps</p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 14 }}>
             {[
-              { n: "1", title: "Upload or paste", desc: "Drop in any file or paste your notes. Pick your difficulty level." },
-              { n: "2", title: "Generate and review", desc: "AI builds your cards. Approve, edit, or delete before saving." },
-              { n: "3", title: "Study and quiz", desc: "Flip through cards, ask the tutor questions, then test yourself." },
-              { n: "4", title: "Fix your weak spots", desc: "AI analyzes what you missed and builds targeted practice." },
+              { n: "1", title: "Upload or paste", desc: "Drop in a file or paste your notes, pick a difficulty, and choose how many cards you want." },
+              { n: "2", title: "Review before saving", desc: "Every card lands in a review screen first. Approve, rewrite, delete, or ask for an easier version." },
+              { n: "3", title: "Study the deck", desc: "Flip through full-size cards, jump around the grid, and open the tutor on anything confusing." },
+              { n: "4", title: "Quiz yourself", desc: "Multiple choice or written answers. Written answers get graded with a score and feedback." },
+              { n: "5", title: "Fix the gaps", desc: "After a quiz, the AI names what you are struggling with and builds targeted practice cards." },
             ].map((s) => (
               <div key={s.n} style={{ background: C.bgCard, border: `0.5px solid ${C.border}`, borderRadius: 14, padding: "1.5rem" }}>
                 <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.accentDim, border: `0.5px solid ${C.accentBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 600, color: C.accent, marginBottom: 14 }}>{s.n}</div>
                 <div style={{ fontSize: 14, fontWeight: 500, color: C.textPrimary, marginBottom: 8 }}>{s.title}</div>
                 <div style={{ fontSize: 13, color: C.textSecondary, lineHeight: 1.7 }}>{s.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "5rem" }}>
+          <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+            <h2 style={{ fontSize: 32, fontWeight: 600, color: C.textPrimary, marginBottom: 8 }}>Study together</h2>
+            <p style={{ fontSize: 16, color: C.textSecondary, margin: 0 }}>Classes let a whole study group share one set of decks</p>
+          </div>
+          <div style={{ background: C.bgCard, border: `0.5px solid ${C.border}`, borderRadius: 20, padding: "2.5rem 2rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "2rem", alignItems: "start" }}>
+              <div>
+                <div style={{ fontSize: 20, marginBottom: 10 }}>{"\u{1F511}"}</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: C.textPrimary, marginBottom: 8 }}>Create with a code</div>
+                <div style={{ fontSize: 13, color: C.textSecondary, lineHeight: 1.7 }}>Name your class and get a short join code like CIS-4X7K. Send it to your classmates.</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 20, marginBottom: 10 }}>{"\u{1F4E4}"}</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: C.textPrimary, marginBottom: 8 }}>Share your decks</div>
+                <div style={{ fontSize: 13, color: C.textSecondary, lineHeight: 1.7 }}>Push any deck you have made to the class. Everyone can study it and copy it to their own account.</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 20, marginBottom: 10 }}>{"\u{1F525}"}</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: C.textPrimary, marginBottom: 8 }}>Keep your streak</div>
+                <div style={{ fontSize: 13, color: C.textSecondary, lineHeight: 1.7 }}>Generate cards on consecutive days to build a streak and stay in the habit.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "5rem" }}>
+          <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+            <h2 style={{ fontSize: 32, fontWeight: 600, color: C.textPrimary, marginBottom: 8 }}>Common questions</h2>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 720, margin: "0 auto" }}>
+            {[
+              { q: "What files can I upload?", a: "PDF, DOCX, PPTX, TXT, and images (PNG, JPG, WEBP). Text is extracted in your browser before anything is sent, so large files stay fast." },
+              { q: "Do I have to use the AI cards as-is?", a: "No. Every generated set goes through a review screen where you can rewrite any question or answer, delete cards you do not want, or ask for an easier or harder version of a card." },
+              { q: "How does written-answer grading work?", a: "You type your answer and the AI compares it to the expected answer. It gives partial credit when the meaning is right but the wording differs, plus a short explanation of what was missing." },
+              { q: "Can I use my decks outside MindSync?", a: "Yes. Export any deck as CSV to open in Excel or Google Sheets, or as JSON to move it into another tool." },
+              { q: "Is it free?", a: "Yes. Sign in with Google and everything is available. No card required." },
+            ].map((f) => (
+              <div key={f.q} style={{ background: C.bgCard, border: `0.5px solid ${C.border}`, borderRadius: 12, padding: "1.25rem 1.5rem" }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: C.textPrimary, marginBottom: 6 }}>{f.q}</div>
+                <div style={{ fontSize: 13, color: C.textSecondary, lineHeight: 1.7 }}>{f.a}</div>
               </div>
             ))}
           </div>
