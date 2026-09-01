@@ -6,7 +6,7 @@ An AI-powered study platform that turns notes, documents, and slides into flashc
 
 **[Live demo](https://mindsync-nu.vercel.app)** · Built with React, FastAPI, Firebase, and the Claude API.
 
-<!-- Drag a screenshot into the GitHub editor here and it will insert the image markdown for you -->
+<img width="1455" height="703" alt="Screenshot 2026-09-01 at 4 27 46 PM" src="https://github.com/user-attachments/assets/ee655cb6-4bd0-4a49-9214-e5acb4ca6310" />
 
 ---
 
