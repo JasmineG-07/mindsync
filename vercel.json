@@ -1,6 +1,8 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "build",
-  "framework": "create-react-app",
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  "services": {
+    "frontend": {
+      "root": ".",
+      "framework": "create-react-app"
+    }
+  }
 }
