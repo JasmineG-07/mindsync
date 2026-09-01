@@ -1,8 +1,12 @@
 # MindSync
 
+[![CI](https://github.com/JasmineG-07/mindsync/actions/workflows/ci.yml/badge.svg)](https://github.com/JasmineG-07/mindsync/actions/workflows/ci.yml)
+
 An AI-powered study platform that turns notes, documents, and slides into flashcards — then quizzes you, explains what you miss, and builds targeted practice for your weak spots.
 
-Built with React, FastAPI, Firebase, and the Claude API.
+**[Live demo](https://mindsync-nu.vercel.app)** · Built with React, FastAPI, Firebase, and the Claude API.
+
+<!-- Drag a screenshot into the GitHub editor here and it will insert the image markdown for you -->
 
 ---
 
@@ -107,10 +111,19 @@ The API key lives only in the backend `.env` and is never exposed to the browser
 git clone https://github.com/JasmineG-07/mindsync.git
 cd mindsync
 npm install
-npm start
 ```
 
-Add your Firebase config to `src/firebase.js`.
+Create `.env` in the project root:
+
+```
+REACT_APP_API_URL=http://127.0.0.1:8000
+```
+
+Add your Firebase config to `src/firebase.js`, then:
+
+```bash
+npm start
+```
 
 ### Backend
 
@@ -118,13 +131,14 @@ Add your Firebase config to `src/firebase.js`.
 cd backend
 python3 -m venv venv
 source venv/bin/activate
-pip install fastapi uvicorn anthropic python-dotenv
+pip install -r requirements.txt
 ```
 
 Create `backend/.env`:
 
 ```
 ANTHROPIC_API_KEY=your_key_here
+ALLOWED_ORIGINS=http://localhost:3000
 ```
 
 Run it:
@@ -133,7 +147,7 @@ Run it:
 uvicorn main:app --reload
 ```
 
-The frontend expects the backend at `http://127.0.0.1:8000`.
+The frontend reads the backend URL from `REACT_APP_API_URL`, defaulting to `http://127.0.0.1:8000`.
 
 ### Firebase setup
 
@@ -167,18 +181,107 @@ Users can only read and delete their own decks. Class content is readable by sig
 
 ---
 
+## Testing
+
+41 tests across the stack, run automatically on every push via GitHub Actions.
+
+### Backend (22 tests, pytest)
+
+```bash
+cd backend
+pip install pytest httpx
+pytest -v
+```
+
+The Anthropic client is mocked, so tests run without an API key or network access. Coverage includes happy paths for every endpoint, input validation, markdown-fence stripping, malformed model output, conversation history truncation, and error mapping (missing key → 503, upstream rate limit → 429).
+
+### Frontend (19 tests, React Testing Library)
+
+```bash
+npm test
+```
+
+Firebase and the file-parsing libraries are mocked. Coverage includes the auth gate, navigation between all five pages, Explore search filtering, the full generate → review → save flow, error surfacing, retry behaviour, and streak persistence.
+
+---
+
+## Error handling
+
+Failures are classified rather than swallowed into a generic message.
+
+The backend maps SDK exceptions onto meaningful status codes:
+
+| Condition | Status | What the user sees |
+|---|---|---|
+| No API key configured | 503 | "The AI service is not configured" |
+| Upstream rate limit | 429 | "Rate limited, wait a moment" |
+| Account out of credits | 402 | "The AI account has no credits left" |
+| Model returned invalid JSON | 502 | "Malformed response, try again" |
+| Network failure to Anthropic | 504 | "Could not reach the AI service" |
+
+The frontend retries transient failures (429, 5xx, network errors) with exponential backoff, and fails fast on errors that will not resolve on retry (400, 402). Every message shown to the user comes from the server's `detail` field where one exists.
+
+### Rate limiting
+
+Per-IP limits via `slowapi` so a public deployment cannot burn through API credits:
+
+| Endpoint group | Limit |
+|---|---|
+| `/generate`, `/suggest-name` | 20/min |
+| `/generate-from-image`, `/build-quiz`, `/analyze-weakness` | 10/min |
+| `/explain-card`, `/grade-answer`, `/adapt-card` | 30/min |
+
+Request payloads are also bounded — notes cap at 100,000 characters, card counts at 50, and image media types are allowlisted.
+
+---
+
+## Deployment
+
+The frontend is on Vercel and the backend on Railway.
+
+### Backend (Railway)
+
+1. Create a new project from the GitHub repo, root directory `backend`
+2. Set environment variables:
+   ```
+   ANTHROPIC_API_KEY=sk-ant-...
+   ALLOWED_ORIGINS=https://your-frontend.vercel.app
+   ```
+3. Railway detects the `Procfile` and runs `uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+### Frontend (Vercel)
+
+1. Import the repo, framework preset Create React App
+2. Set environment variable:
+   ```
+   REACT_APP_API_URL=https://your-backend.up.railway.app
+   ```
+3. Add the Vercel domain to Firebase → Authentication → Settings → Authorized domains
+
+Both platforms redeploy automatically on push to `main`.
+
+---
+
 ## Project structure
 
 ```
 mindsync/
+├── .github/
+│   └── workflows/
+│       └── ci.yml           # Runs both test suites on every push
 ├── src/
-│   ├── App.js          # All pages and components
-│   ├── firebase.js     # Auth, Firestore, class/deck helpers
+│   ├── App.js               # All pages and components
+│   ├── App.test.js          # Frontend tests
+│   ├── firebase.js          # Auth, Firestore, class/deck helpers
 │   └── index.js
 ├── backend/
-│   ├── main.py         # FastAPI app with all AI endpoints
-│   └── .env            # API key (gitignored)
-├── public/
+│   ├── main.py              # FastAPI app with all AI endpoints
+│   ├── test_main.py         # Backend tests
+│   ├── requirements.txt
+│   ├── Procfile             # Railway start command
+│   └── .env                 # API key (gitignored)
+├── vercel.json
+├── .env                     # REACT_APP_API_URL (gitignored)
 └── README.md
 ```
 
@@ -186,11 +289,12 @@ mindsync/
 
 ## Roadmap
 
-- [ ] Deploy frontend (Vercel) and backend (Railway)
+- [x] Deploy frontend (Vercel) and backend (Railway)
+- [x] Test suite and CI pipeline
+- [x] Rate limiting and structured error handling
 - [ ] Lecture recording to flashcards via Web Speech API
 - [ ] Spaced repetition scheduling
-- [ ] Unit tests and CI
-- [ ] Real public deck backend (currently seeded sample data)
+- [ ] Public deck sharing — let users publish their own decks to the Explore page
 
 ---
 
