@@ -503,7 +503,10 @@ function TutorPanel({ card, onClose }) {
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
 
-  useEffect(() => { askTutor(null); /* eslint-disable-next-line */ }, []);
+  useEffect(() => {
+    askTutor(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
 
   async function askTutor(userText) {
@@ -952,7 +955,10 @@ function ClassesPage({ user }) {
     try { setClasses((await getUserClasses(user.uid)) || []); } catch (e) { console.error(e); setClasses([]); }
     setLoading(false);
   }
-  useEffect(() => { reload(); /* eslint-disable-next-line */ }, [user]);
+  useEffect(() => {
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   async function openClass(cl) {
     setActiveClass(cl); setDecksLoading(true); setActiveDeck(null);
@@ -1495,7 +1501,10 @@ function MyDecksPage({ user }) {
     } catch (e) { console.error(e); setDecks([]); }
     setLoading(false);
   }
-  useEffect(() => { reload(); /* eslint-disable-next-line */ }, [user]);
+   useEffect(() => {
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   async function handleDelete(id) { await deleteDeck(id); setDecks((p) => p.filter((d) => d.id !== id)); if (activeDeck?.id === id) setActiveDeck(null); }
 
