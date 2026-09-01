@@ -11,7 +11,7 @@ import JSZip from "jszip";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
-const API = "http://127.0.0.1:8000";
+const API = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
 const globalStyles = `
   @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
@@ -79,14 +79,60 @@ function parseJSON(text) {
   return JSON.parse(clean);
 }
 
-async function postJSON(path, body) {
-  const res = await fetch(`${API}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-  return await res.json();
+class ApiError extends Error {
+  constructor(message, status, retryable) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.retryable = retryable;
+  }
+}
+
+function messageForStatus(status, detail) {
+  if (detail) return detail;
+  if (status === 429) return "Too many requests. Wait a moment and try again.";
+  if (status === 402) return "The AI account is out of credits.";
+  if (status === 503) return "The AI service is unavailable right now.";
+  if (status === 504) return "The request timed out. Try again.";
+  if (status === 502) return "The AI returned an unexpected response. Try again.";
+  if (status >= 500) return "Server error. Try again in a moment.";
+  if (status === 400) return "That request was not valid. Check your input.";
+  return `Request failed (${status}).`;
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function postJSON(path, body, { retries = 2 } = {}) {
+  let lastError;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    let res;
+    try {
+      res = await fetch(`${API}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } catch {
+      lastError = new ApiError("Could not reach the server. Is the backend running?", 0, true);
+      if (attempt < retries) { await sleep(600 * (attempt + 1)); continue; }
+      throw lastError;
+    }
+
+    if (res.ok) return await res.json();
+
+    let detail = null;
+    try { const j = await res.json(); detail = j.detail || null; } catch { /* body not json */ }
+
+    const retryable = res.status === 429 || res.status === 502 || res.status === 504 || res.status >= 500;
+    lastError = new ApiError(messageForStatus(res.status, detail), res.status, retryable);
+
+    if (retryable && attempt < retries) {
+      await sleep(res.status === 429 ? 2000 * (attempt + 1) : 600 * (attempt + 1));
+      continue;
+    }
+    throw lastError;
+  }
+  throw lastError;
 }
 
 async function extractTextFromFile(file) {
@@ -378,7 +424,7 @@ function ReviewScreen({ cards, onConfirm, onBack }) {
       const data = await postJSON("/adapt-card", { question: card.q, answer: card.a, direction });
       const newCard = parseJSON(data.card);
       setReviewed((p) => p.map((c) => c.id === card.id ? { ...c, q: newCard.q, a: newCard.a } : c));
-    } catch { alert("Could not adapt that card. Try again."); }
+    } catch (e) { alert(e.message || "Could not adapt that card."); }
     setAdaptingId(null);
   }
 
@@ -470,8 +516,8 @@ function TutorPanel({ card, onClose }) {
         user_question: userText, history,
       });
       setMessages((p) => [...p, { role: "assistant", content: data.explanation }]);
-    } catch {
-      setMessages((p) => [...p, { role: "assistant", content: "Could not reach the tutor. Make sure the backend is running." }]);
+    } catch (e) {
+      setMessages((p) => [...p, { role: "assistant", content: e.message || "Could not reach the tutor." }]);
     }
     setLoading(false);
   }
@@ -615,7 +661,7 @@ function QuizMode({ cards, deckName, onExit }) {
     try {
       const data = await postJSON("/build-quiz", { cards: cards.map((c) => ({ q: c.q, a: c.a })), mode: "multiple_choice" });
       setQuiz(parseJSON(data.quiz));
-    } catch { alert("Could not build the quiz. Is the backend running?"); setMode(null); }
+    } catch (e) { alert(e.message || "Could not build the quiz."); setMode(null); }
     setLoading(false);
   }
 
@@ -636,7 +682,7 @@ function QuizMode({ cards, deckName, onExit }) {
       const g = parseJSON(data.result);
       setGrade(g);
       setResults((p) => [...p, { q: quiz[idx].q, a: quiz[idx].a, correct: g.verdict === "correct", verdict: g.verdict }]);
-    } catch { alert("Could not grade that answer."); }
+    } catch (e) { alert(e.message || "Could not grade that answer."); }
     setGrading(false);
   }
 
@@ -652,7 +698,7 @@ function QuizMode({ cards, deckName, onExit }) {
     try {
       const data = await postJSON("/analyze-weakness", { missed_cards: missed, deck_name: deckName || "this deck" });
       setAnalysis(parseJSON(data.analysis));
-    } catch { alert("Could not run the analysis."); }
+    } catch (e) { alert(e.message || "Could not run the analysis."); }
     setAnalyzing(false);
   }
 
@@ -824,7 +870,7 @@ function ShareToClassModal({ cards, deckName, user, onClose }) {
 
   useEffect(() => {
     (async () => {
-      try { setClasses(await getUserClasses(user.uid)); } catch { /* noop */ }
+      try { setClasses((await getUserClasses(user.uid)) || []); } catch { setClasses([]); }
       setLoading(false);
     })();
   }, [user]);
@@ -903,14 +949,14 @@ function ClassesPage({ user }) {
   const [copied, setCopied] = useState(false);
 
   async function reload() {
-    try { setClasses(await getUserClasses(user.uid)); } catch (e) { console.error(e); }
+    try { setClasses((await getUserClasses(user.uid)) || []); } catch (e) { console.error(e); setClasses([]); }
     setLoading(false);
   }
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [user]);
 
   async function openClass(cl) {
     setActiveClass(cl); setDecksLoading(true); setActiveDeck(null);
-    try { setClassDecks(await getClassDecks(cl.id)); } catch { setClassDecks([]); }
+    try { setClassDecks((await getClassDecks(cl.id)) || []); } catch { setClassDecks([]); }
     setDecksLoading(false);
   }
 
@@ -1175,7 +1221,7 @@ function HomePage({ cardCount, setCardCount, difficulty, setDifficulty, user }) 
       setPendingCards(parsed.map((c, i) => ({ id: i, q: c.q, a: c.a })));
       setShowReview(true); setStatus("");
       updateStreak();
-    } catch { setStatus("Something went wrong. Make sure the backend is running and try again."); }
+    } catch (e) { setStatus(e.message || "Something went wrong. Try again."); }
     setLoading(false);
   }
 
@@ -1211,7 +1257,7 @@ function HomePage({ cardCount, setCardCount, difficulty, setDifficulty, user }) 
       const data = await postJSON("/adapt-card", { question: card.q, answer: card.a, direction });
       const nc = parseJSON(data.card);
       setCards((p) => p.map((c, i) => i === index ? { ...c, q: nc.q, a: nc.a } : c));
-    } catch { alert("Could not rewrite that card."); }
+    } catch (e) { alert(e.message || "Could not rewrite that card."); }
   }
 
   function deleteCardAt(index) {
@@ -1443,8 +1489,10 @@ function MyDecksPage({ user }) {
   const [customCards, setCustomCards] = useState([{ q: "", a: "" }]);
 
   async function reload() {
-    try { const data = await getUserDecks(user.uid); setDecks(data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))); }
-    catch (e) { console.error(e); }
+    try {
+      const data = (await getUserDecks(user.uid)) || [];
+      setDecks([...data].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)));
+    } catch (e) { console.error(e); setDecks([]); }
     setLoading(false);
   }
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [user]);
